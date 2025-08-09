@@ -81,6 +81,15 @@
             background-color: #10B981;
             border-color: #10B981;
         }
+        .interactive-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .interactive-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #6EE7B7;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -125,19 +134,19 @@
                 </div>
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                    <div id="policy-card" class="interactive-card bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
                         <h3 class="font-semibold text-lg text-emerald-700">Policy Tailwinds</h3>
                         <p class="mt-2 text-gray-600">Aggressive climate goals (Net-Zero by 2070) and proactive frameworks like the National CCUS Mission create sustained demand.</p>
                     </div>
-                    <div id="market-demand-card" class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50 hover:shadow-lg hover:border-emerald-300 transition-all duration-300 cursor-pointer">
+                    <div id="market-demand-card" class="interactive-card bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
                         <h3 class="font-semibold text-lg text-emerald-700">Market Demand</h3>
                         <p class="mt-2 text-gray-600">Rapidly growing hard-to-abate sectors (steel, cement) create a massive, immediate market for CaptureLink™ CCS.</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                    <div id="cost-card" class="interactive-card bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
                         <h3 class="font-semibold text-lg text-emerald-700">Cost Advantage</h3>
                         <p class="mt-2 text-gray-600">Significantly lower CapEx and OpEx fundamentally improve the unit economics of our hardware solutions.</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                    <div id="talent-card" class="interactive-card bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
                         <h3 class="font-semibold text-lg text-emerald-700">Talent Pool</h3>
                         <p class="mt-2 text-gray-600">Access to a vast, cost-effective pool of skilled engineering and tech talent, resolving key visa challenges.</p>
                     </div>
@@ -320,7 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const contentSections = document.querySelectorAll('.content-section');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
+    
+    const policyCard = document.getElementById('policy-card');
     const marketDemandCard = document.getElementById('market-demand-card');
+    const costCard = document.getElementById('cost-card');
+    const talentCard = document.getElementById('talent-card');
 
     function setActiveSection(targetId) {
         contentSections.forEach(section => {
@@ -341,6 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         mobileMenu.classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     navLinks.forEach(link => {
@@ -354,15 +368,11 @@ document.addEventListener('DOMContentLoaded', function () {
         mobileMenu.classList.toggle('hidden');
     });
 
-    if (marketDemandCard) {
-        marketDemandCard.addEventListener('click', () => {
-            setActiveSection('market');
-            const mainContent = document.querySelector('main');
-            if(mainContent) {
-                mainContent.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    }
+    policyCard.addEventListener('click', () => setActiveSection('market'));
+    marketDemandCard.addEventListener('click', () => setActiveSection('market'));
+    costCard.addEventListener('click', () => setActiveSection('financials'));
+    talentCard.addEventListener('click', () => setActiveSection('operations'));
+
 
     function renderMarketAnalysisChart() {
         const ctx = document.getElementById('marketAnalysisChart').getContext('2d');
@@ -547,5 +557,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
-
-
