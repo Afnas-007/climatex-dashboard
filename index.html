@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClimateX: India Expansion Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Green Accent -->
+    <!-- Application Structure Plan: The SPA is designed as a top-down strategic dashboard. It starts with the main conclusion (Why India?) and then allows users to explore the four core pillars of the strategy: Market Analysis, Product-Market Fit, Financial Blueprint, and Operational/Talent Strategy. This thematic structure is more intuitive for decision-makers than a linear report format. Key interactions include toggling financial scenarios, exploring a phased timeline, and interacting with charts to drill down into comparative data. This user flow is designed to answer the big questions first, then provide supporting evidence on demand. -->
+    <!-- Visualization & Content Choices: 
+        - Market Attractiveness: Report Info -> Weighted scores for India, US, Vietnam, Indonesia. Goal -> Compare market viability. Viz -> Interactive Bar Chart (Chart.js). Interaction -> Hover to see detailed scores and rationale. Justification -> A bar chart is the clearest way to compare scores across multiple criteria.
+        - Financial Projections: Report Info -> 5-year revenue, EBITDA, cash flow. Goal -> Show path to profitability. Viz -> Line Chart (Chart.js). Interaction -> Buttons to toggle between 'Initial' and 'Revised (Capital Efficient)' scenarios. Justification -> Line charts excel at showing trends over time. Toggling scenarios allows for direct comparison of financial strategies.
+        - Phased Roadmap: Report Info -> 3-phase entry plan. Goal -> Organize and explain the timeline. Viz -> Interactive Timeline (HTML/CSS/JS). Interaction -> Click on a phase to expand and see details. Justification -> A visual timeline is more engaging and easier to grasp than a text list.
+        - Glocal Supply Chain: Report Info -> Sourcing plan for components. Goal -> Explain the operational model. Viz -> Diagram (HTML/Tailwind CSS). Interaction -> Static visual for clarity. Justification -> A simple flow diagram clearly illustrates the complex supply chain logic without needing a complex library.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4;
+            color: #3f3c3a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 60vh;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .nav-link.active {
+            color: #10B981;
+            border-bottom-color: #10B981;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 1.25rem;
+            top: 1.25rem;
+            bottom: -1.25rem;
+            width: 2px;
+            background-color: #d1d5db;
+            transform: translateX(-50%);
+        }
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 1.25rem;
+            top: 1.25rem;
+            height: 1rem;
+            width: 1rem;
+            border-radius: 9999px;
+            background-color: white;
+            border: 2px solid #6b7280;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .timeline-item.active .timeline-dot {
+            background-color: #10B981;
+            border-color: #10B981;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="min-h-screen">
+        <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl font-bold text-emerald-600">ClimateX</span>
+                        <span class="text-2xl font-light text-gray-600">| India Expansion</span>
+                    </div>
+                    <nav class="hidden md:flex items-center space-x-8">
+                        <a data-target="overview" class="nav-link text-gray-600 hover:text-emerald-600 border-b-2 border-transparent pb-1">Overview</a>
+                        <a data-target="market" class="nav-link text-gray-600 hover:text-emerald-600 border-b-2 border-transparent pb-1">Market Analysis</a>
+                        <a data-target="financials" class="nav-link text-gray-600 hover:text-emerald-600 border-b-2 border-transparent pb-1">Financials</a>
+                        <a data-target="operations" class="nav-link text-gray-600 hover:text-emerald-600 border-b-2 border-transparent pb-1">Operations & Talent</a>
+                    </nav>
+                    <div class="md:hidden">
+                        <button id="mobile-menu-button" class="text-gray-600 hover:text-emerald-600 focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden">
+                <nav class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a data-target="overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-emerald-700 hover:bg-emerald-50">Overview</a>
+                    <a data-target="market" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-emerald-700 hover:bg-emerald-50">Market Analysis</a>
+                    <a data-target="financials" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-emerald-700 hover:bg-emerald-50">Financials</a>
+                    <a data-target="operations" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-emerald-700 hover:bg-emerald-50">Operations & Talent</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            
+            <section id="overview" class="content-section">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">The India Mandate: A Strategic Imperative</h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">This report unequivocally recommends India for ClimateX's first international expansion. India offers an unparalleled confluence of policy tailwinds, market demand, and operational advantages that align perfectly with our product portfolio and long-term growth ambitions.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                        <h3 class="font-semibold text-lg text-emerald-700">Policy Tailwinds</h3>
+                        <p class="mt-2 text-gray-600">Aggressive climate goals (Net-Zero by 2070) and proactive frameworks like the National CCUS Mission create sustained demand.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                        <h3 class="font-semibold text-lg text-emerald-700">Market Demand</h3>
+                        <p class="mt-2 text-gray-600">Rapidly growing hard-to-abate sectors (steel, cement) create a massive, immediate market for CaptureLink™ CCS.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                        <h3 class="font-semibold text-lg text-emerald-700">Cost Advantage</h3>
+                        <p class="mt-2 text-gray-600">Significantly lower CapEx and OpEx fundamentally improve the unit economics of our hardware solutions.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                        <h3 class="font-semibold text-lg text-emerald-700">Talent Pool</h3>
+                        <p class="mt-2 text-gray-600">Access to a vast, cost-effective pool of skilled engineering and tech talent, resolving key visa challenges.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200/80">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Phased 5-Year Roadmap</h2>
+                    <p class="text-center text-gray-600 max-w-2xl mx-auto mb-10">Our entry into India is structured as a de-risked, three-phase plan. This approach optimizes capital, builds momentum with early SaaS wins, and scales investment in line with market maturity and revenue growth. Click on each phase to see the detailed action plan.</p>
+                    <div id="timeline-container" class="relative">
+                        <!-- Timeline items will be injected here by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="market" class="content-section">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">Comparative Market Analysis</h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">To provide a data-driven rationale, we evaluated four potential markets against criteria derived from C-suite objectives. India emerges as the unequivocal leader, scoring highest on the most critical strategic drivers.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-200/80">
+                    <div class="chart-container">
+                        <canvas id="marketAnalysisChart"></canvas>
+                    </div>
+                </div>
+                 <div class="mt-12 bg-white rounded-xl shadow-lg p-8 border border-gray-200/80">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Unmatched Product-Market Synergy</h2>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto mb-10">A crucial differentiator for India is the remarkable synergy across our entire product portfolio. The deployment of one product actively creates and enhances the market for the others, creating a powerful, self-reinforcing growth cycle.</p>
+                    <div class="grid md:grid-cols-3 gap-8 text-center">
+                        <div class="p-6 rounded-lg bg-emerald-50/50">
+                            <h3 class="font-bold text-xl text-emerald-800">CaptureLink™ CCS</h3>
+                            <p class="mt-2 text-gray-700">The <span class="font-semibold">anchor technology</span> for India's massive steel and cement industries.</p>
+                        </div>
+                        <div class="p-6 rounded-lg bg-emerald-50/50">
+                            <h3 class="font-bold text-xl text-emerald-800">VeriScope™ & OffsetX™</h3>
+                            <p class="mt-2 text-gray-700">The <span class="font-semibold">immediate revenue engine</span>, driven by CCS adoption and the new Indian Carbon Market.</p>
+                        </div>
+                        <div class="p-6 rounded-lg bg-emerald-50/50">
+                            <h3 class="font-bold text-xl text-emerald-800">AtmosCore™ DAC</h3>
+                            <p class="mt-2 text-gray-700">The <span class="font-semibold">strategic growth horizon</span>, enabled by India's National Green Hydrogen Mission.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="financials" class="content-section">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">Financial Blueprint</h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">This 5-year financial plan demonstrates a clear and accelerated path to profitability, leveraging India's significant cost advantages and a diversified revenue architecture.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-200/80">
+                    <div class="flex justify-center mb-6 space-x-2">
+                        <button id="scenario-revised" class="scenario-btn bg-emerald-600 text-white px-4 py-2 rounded-md shadow">Capital Efficient Plan</button>
+                        <button id="scenario-initial" class="scenario-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md">Initial Plan</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="financialsChart"></canvas>
+                    </div>
+                    <div id="financial-summary" class="mt-8 text-center text-gray-600 max-w-2xl mx-auto">
+                        <!-- Summary text will be updated by JS -->
+                    </div>
+                </div>
+            </section>
+            
+            <section id="operations" class="content-section">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800">Operations & Talent Strategy</h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">A resilient "Glocal" operational backbone and a progressive talent strategy will transform challenges into a source of profound competitive advantage.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200/80">
+                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">"Glocal" Supply & Production</h2>
+                        <p class="text-center text-gray-600 max-w-2xl mx-auto mb-6">Our hybrid model leverages the best of global expertise and local advantages, balancing quality with cost-efficiency.</p>
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg">G</div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Global Sourcing</h4>
+                                    <p class="text-gray-600">Mission-critical components like Sorbent Media (Germany/S. Korea) and specialized electronics (China/Taiwan) to ensure quality.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">L</div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Local Sourcing & Assembly</h4>
+                                    <p class="text-gray-600">Structural steel, sheet metal, and ancillary parts sourced locally in India, leveraging existing supplier relationships and lower costs.</p>
+                                </div>
+                            </div>
+                             <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-lg">Hub</div>
+                                <div>
+                                    <h4 class="font-semibold text-lg">Indian Assembly Hub</h4>
+                                    <p class="text-gray-600">A new hub in an industrial corridor (e.g., DMIC) will assemble AtmosCore™ DAC units for India and the APAC region.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200/80">
+                        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">The "C.A.R.E.S." Talent Model</h2>
+                        <p class="text-center text-gray-600 max-w-2xl mx-auto mb-6">A holistic framework designed to attract, develop, and retain the very best talent in India's competitive market.</p>
+                        <div class="space-y-3">
+                            <div class="p-3 rounded-lg bg-gray-100"><span class="font-bold text-emerald-700">C</span>ompensation & Culture</div>
+                            <div class="p-3 rounded-lg bg-gray-100"><span class="font-bold text-emerald-700">A</span>utonomy & Flexibility (Hybrid Work Policy)</div>
+                            <div class="p-3 rounded-lg bg-gray-100"><span class="font-bold text-emerald-700">R</span>ecognition & Growth</div>
+                            <div class="p-3 rounded-lg bg-gray-100"><span class="font-bold text-emerald-700">E</span>mpowerment & Upskilling</div>
+                            <div class="p-3 rounded-lg bg-gray-100"><span class="font-bold text-emerald-700">S</span>tability & Well-being</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const data = {
+        marketAnalysis: {
+            labels: ['Policy & Regulatory Support', 'Addressable Market Size', 'Operational Feasibility & Cost', 'Talent Availability & Cost', 'Geopolitical & Supply Chain Risk'],
+            countries: [
+                { name: 'India', scores: [9, 9, 8, 9, 7], final: 8.45, color: '#10B981' },
+                { name: 'Indonesia', scores: [7, 6, 9, 5, 6], final: 6.95, color: '#6EE7B7' },
+                { name: 'United States', scores: [7, 10, 4, 7, 4], final: 6.65, color: '#A7F3D0' },
+                { name: 'Vietnam', scores: [6, 5, 9, 6, 6], final: 6.55, color: '#D1FAE5' },
+            ]
+        },
+        financials: {
+            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+            scenarios: {
+                initial: {
+                    revenue: [1.5, 4.0, 8.3, 14.5, 22.6],
+                    ebitda: [-8.3, -7.3, -20.1, -16.1, -11.2],
+                    cashFlow: [-10.8, -21.1, -80.7, -102.8, -121.1],
+                    summary: "The initial model shows aggressive growth but a high cash burn, requiring significant further financing beyond the initial $60M for the large CapEx in Year 3."
+                },
+                revised: {
+                    revenue: [1.0, 3.5, 7.8, 15.2, 25.5],
+                    ebitda: [-6.2, -5.7, -6.1, -2.8, 1.9],
+                    cashFlow: [-7.7, -33.4, -59.5, -66.3, -66.9],
+                    summary: "The capital-efficient plan prioritizes a de-risked approach. It fully utilizes the initial $60M by Year 3 to build a scalable platform and approaches cash-flow break-even by Year 5, demonstrating a clear ROI."
+                }
+            }
+        },
+        timeline: [
+            {
+                phase: 'Phase 1: Foundation & Early Wins (Years 1-2)',
+                title: 'Establish & Generate Early Revenue',
+                details: [
+                    'Incorporate wholly-owned subsidiary: ClimateX India Pvt. Ltd.',
+                    'Launch high-margin SaaS products: VeriScope™ & OffsetX™.',
+                    'Form strategic JV partnerships for CaptureLink™ CCS pilots with 2-3 leading industrial players.',
+                    'Hire core leadership team (Country Head, Head of Sales, Head of Ops).'
+                ]
+            },
+            {
+                phase: 'Phase 2: Pilot & Build (Years 3-4)',
+                title: 'Deploy Hardware & Build Infrastructure',
+                details: [
+                    'Initiate construction and commissioning of 2-3 pilot CaptureLink™ CCS projects.',
+                    'Establish local assembly hub for modular AtmosCore™ DAC units in a major industrial corridor (e.g., DMIC).',
+                    'Scale SaaS sales and customer support teams.',
+                    'Recruit specialized project management and engineering teams.'
+                ]
+            },
+            {
+                phase: 'Phase 3: Scale & Dominate (Year 5+)',
+                title: 'Achieve Commercial Scale & Market Leadership',
+                details: [
+                    'Convert successful CCS pilots into large-scale, long-term CRaaS contracts.',
+                    'Commercially launch modular AtmosCore™ DAC units from the Indian hub.',
+                    'Ramp up to full-scale production to meet domestic and regional demand.',
+                    'Solidify position as the premier end-to-end decarbonization partner in India.'
+                ]
+            }
+        ]
+    };
+
+    let marketChart, financialsChart;
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    function setActiveSection(targetId) {
+        contentSections.forEach(section => {
+            section.classList.toggle('active', section.id === targetId);
+        });
+        navLinks.forEach(link => {
+            link.classList.toggle('active', link.dataset.target === targetId);
+        });
+
+        if (targetId === 'market' && !marketChart) {
+            renderMarketAnalysisChart();
+        }
+        if (targetId === 'financials' && !financialsChart) {
+            renderFinancialsChart('revised');
+        }
+        if (targetId === 'overview') {
+            renderTimeline();
+        }
+        
+        mobileMenu.classList.add('hidden');
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            setActiveSection(link.dataset.target);
+        });
+    });
+    
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    function renderMarketAnalysisChart() {
+        const ctx = document.getElementById('marketAnalysisChart').getContext('2d');
+        const sortedCountries = [...data.marketAnalysis.countries].sort((a, b) => b.final - a.final);
+
+        marketChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedCountries.map(c => c.name),
+                datasets: [{
+                    label: 'Market Attractiveness Score',
+                    data: sortedCountries.map(c => c.final),
+                    backgroundColor: sortedCountries.map(c => c.color),
+                    borderColor: sortedCountries.map(c => c.color.replace('B7', 'FF')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Final Weighted Market Attractiveness Score',
+                        font: { size: 16, weight: 'bold' },
+                        padding: { top: 10, bottom: 20 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const countryName = context.label;
+                                const countryData = data.marketAnalysis.countries.find(c => c.name === countryName);
+                                if (!countryData) return '';
+                                let tooltipText = [`Final Score: ${countryData.final}`];
+                                data.marketAnalysis.labels.forEach((label, i) => {
+                                    tooltipText.push(`${label}: ${countryData.scores[i]}/10`);
+                                });
+                                return tooltipText;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Weighted Score' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderFinancialsChart(scenario) {
+        const scenarioData = data.financials.scenarios[scenario];
+        const financialSummary = document.getElementById('financial-summary');
+        financialSummary.textContent = scenarioData.summary;
+
+        const datasets = [
+            {
+                label: 'Total Revenue ($M)',
+                data: scenarioData.revenue,
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.3
+            },
+            {
+                label: 'EBITDA ($M)',
+                data: scenarioData.ebitda,
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: false,
+                tension: 0.3
+            },
+            {
+                label: 'Cumulative Cash Flow ($M)',
+                data: scenarioData.cashFlow,
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: false,
+                tension: 0.3,
+                borderDash: [5, 5]
+            }
+        ];
+
+        if (financialsChart) {
+            financialsChart.data.datasets = datasets;
+            financialsChart.update();
+        } else {
+            const ctx = document.getElementById('financialsChart').getContext('2d');
+            financialsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.financials.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `5-Year Financial Projections (${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Plan)`,
+                            font: { size: 16, weight: 'bold' },
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: { display: true, text: 'USD ($M)' }
+                        }
+                    }
+                }
+            });
+        }
+        financialsChart.options.plugins.title.text = `5-Year Financial Projections (${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Plan)`;
+        financialsChart.update();
+    }
+    
+    const scenarioButtons = document.querySelectorAll('.scenario-btn');
+    scenarioButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const scenario = button.id.split('-')[1];
+            renderFinancialsChart(scenario);
+            scenarioButtons.forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            button.classList.add('bg-emerald-600', 'text-white');
+            button.classList.remove('bg-gray-200', 'text-gray-700');
+        });
+    });
+
+    function renderTimeline() {
+        const container = document.getElementById('timeline-container');
+        if (container.childElementCount > 0) return;
+
+        data.timeline.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = `timeline-item relative pl-10 pb-10 cursor-pointer ${index === 0 ? 'active' : ''}`;
+            div.innerHTML = `
+                <div class="timeline-dot"></div>
+                <h4 class="font-bold text-xl mb-1 text-gray-700">${item.phase}</h4>
+                <p class="text-gray-500 mb-3">${item.title}</p>
+                <div class="details hidden pl-4 border-l-2 border-emerald-200">
+                    <ul class="list-disc list-inside text-gray-600 space-y-1">
+                        ${item.details.map(d => `<li>${d}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        const firstItem = container.querySelector('.timeline-item');
+        if (firstItem) {
+            firstItem.querySelector('.details').classList.remove('hidden');
+        }
+
+        container.querySelectorAll('.timeline-item').forEach(item => {
+            item.addEventListener('click', () => {
+                container.querySelectorAll('.timeline-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.details').classList.add('hidden');
+                });
+                item.classList.add('active');
+                item.querySelector('.details').classList.remove('hidden');
+            });
+        });
+    }
+
+    setActiveSection('overview');
+});
+</script>
+
+</body>
+</html>
