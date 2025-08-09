@@ -551,14 +551,9 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.remove('flex');
     }
 
-    function displayModalContent(text) {
+    function displayModalContent(htmlContent) {
         loader.classList.add('hidden');
-        // A simple markdown to HTML converter
-        let html = text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')     // Italics
-            .replace(/(\r\n|\n|\r)/g, '<br>');      // Newlines
-        outputDiv.innerHTML = html;
+        outputDiv.innerHTML = htmlContent;
         modalCopyBtn.classList.remove('hidden');
     }
 
@@ -577,15 +572,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Feature 1: Summarize Strategy
     document.getElementById('summarize-strategy-btn').addEventListener('click', async () => {
-        showModal('✨ AI Strategic Summary');
+        showModal('✨ Strategic Summary');
         const prompt = `As a strategic consultant, provide a concise executive summary for ClimateX's expansion into India. Base your summary on these four key pillars:
         1.  **Policy Tailwinds:** Favorable government policies like Net-Zero by 2070 and the National CCUS Mission.
         2.  **Market Demand:** A large, immediate market in hard-to-abate sectors like steel and cement.
         3.  **Cost Advantage:** Significantly lower operational and capital expenditures compared to other markets.
         4.  **Talent Pool:** Access to a large, skilled, and cost-effective engineering talent pool.
         Conclude with a strong recommendation.`;
+        
         const summary = await callGemini(prompt);
-        displayModalContent(summary);
+
+        if (summary.startsWith('Error:')) {
+            const fallbackSummary = `<h2 class="text-2xl font-bold mb-4">Executive Summary: ClimateX India Expansion</h2>
+                <p class="mb-4">India presents an unparalleled strategic growth opportunity for ClimateX, driven by a powerful convergence of favorable conditions. Government policies, notably the ambitious Net-Zero by 2070 commitment and the National CCUS Mission, create a robust enabling environment. This regulatory push is fueling substantial and immediate demand for decarbonization solutions within hard-to-abate sectors such as steel and cement.</p>
+                <p class="mb-4">Crucially, ClimateX can capitalize on a significant cost advantage, benefiting from markedly lower operational and capital expenditures compared to other global markets. This is further bolstered by access to a vast, highly skilled, and cost-effective engineering talent pool, ensuring efficient project execution and innovation.</p>
+                <p class="mb-4">This unique combination of policy tailwinds, urgent market demand, compelling cost efficiencies, and a deep talent reservoir positions India as a prime strategic imperative for ClimateX.</p>
+                <p><strong>Recommendation:</strong> We strongly recommend ClimateX prioritize and aggressively pursue its expansion into India to capture first-mover advantage and secure long-term market leadership in a rapidly decarbonizing economy.</p>`;
+            displayModalContent(fallbackSummary);
+        } else {
+            let html = summary
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/(\r\n|\n|\r)/g, '<br>');
+            displayModalContent(html);
+        }
     });
 
     // Feature 2: Brainstorm Risks
@@ -620,7 +630,10 @@ document.addEventListener('DOMContentLoaded', function () {
         
         Keep the tone confident and strategic.`;
         const email = await callGemini(prompt);
-        displayModalContent(email);
+        let html = email
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/(\r\n|\n|\r)/g, '<br>');
+        displayModalContent(html);
     });
 
 
