@@ -110,6 +110,29 @@
         .internal-link:hover {
             color: #047857;
         }
+        .gemini-modal {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .gemini-btn {
+            background-color: #10B981;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .gemini-btn:hover {
+            background-color: #059669;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10B981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -153,7 +176,7 @@
                     <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">This report unequivocally recommends India for ClimateX's first international expansion. India offers an unparalleled confluence of policy tailwinds, market demand, and operational advantages that align perfectly with our product portfolio and long-term growth ambitions.</p>
                 </div>
 
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                     <div id="policy-card" class="interactive-card bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
                         <h3 class="font-semibold text-lg text-emerald-700">Policy Tailwinds</h3>
                         <p class="mt-2 text-gray-600">Aggressive climate goals (Net-Zero by 2070) and proactive frameworks like the National CCUS Mission create sustained demand.</p>
@@ -170,6 +193,12 @@
                         <h3 class="font-semibold text-lg text-emerald-700">Talent Pool</h3>
                         <p class="mt-2 text-gray-600">Access to a vast, cost-effective pool of skilled engineering and tech talent, resolving key visa challenges.</p>
                     </div>
+                </div>
+
+                <div class="text-center mb-16">
+                    <button id="summarize-strategy-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+                        ✨ Generate Strategic Summary
+                    </button>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200/80">
@@ -209,6 +238,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="mt-12 text-center">
+                    <button id="brainstorm-risks-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+                        ✨ Brainstorm Market Risks
+                    </button>
+                </div>
+                <div id="market-risks-container" class="mt-8"></div>
             </section>
 
             <section id="financials" class="content-section">
@@ -251,6 +286,11 @@
                         </div>
                         <div id="financial-summary" class="text-center text-gray-600 max-w-3xl mx-auto bg-gray-50 p-4 rounded-lg">
                             <!-- Summary text will be updated by JS -->
+                        </div>
+                        <div class="mt-8 text-center">
+                            <button id="draft-email-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+                                ✨ Draft Stakeholder Update
+                            </button>
                         </div>
                     </div>
 
@@ -335,6 +375,27 @@
         </main>
     </div>
 
+    <!-- Gemini Modal -->
+    <div id="gemini-modal" class="gemini-modal fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="gemini-modal-title" class="text-xl font-bold">AI Generated Content</h3>
+                <button id="gemini-modal-close" class="text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            <div id="gemini-modal-content" class="p-6 overflow-y-auto">
+                <!-- Loader -->
+                <div id="gemini-loader" class="flex justify-center items-center h-48">
+                    <div class="loader"></div>
+                </div>
+                <!-- Content -->
+                <div id="gemini-output" class="prose max-w-none"></div>
+            </div>
+             <div class="p-4 border-t flex justify-end">
+                <button id="gemini-modal-copy" class="gemini-btn font-bold py-2 px-4 rounded-lg hidden">Copy Text</button>
+            </div>
+        </div>
+    </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const data = {
@@ -351,18 +412,21 @@ document.addEventListener('DOMContentLoaded', function () {
             labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
             scenarios: {
                 initial: {
+                    name: 'Initial Plan',
                     revenue: [1.5, 4.0, 8.3, 14.5, 22.6],
                     ebitda: [-8.3, -7.3, -20.1, -16.1, -11.2],
                     cashFlow: [-10.8, -21.1, -80.7, -102.8, -121.1],
                     summary: "The initial model shows aggressive growth but a high cash burn, requiring significant further financing beyond the initial $60M for the large CapEx in Year 3."
                 },
                 revised: {
+                    name: 'Capital Efficient Plan',
                     revenue: [1.0, 3.5, 7.8, 15.2, 25.5],
                     ebitda: [-6.2, -5.7, -6.1, -2.8, 1.9],
                     cashFlow: [-7.7, -33.4, -59.5, -66.3, -66.9],
                     summary: "The capital-efficient plan prioritizes a de-risked approach. It fully utilizes the initial $60M by Year 3 to build a scalable platform and approaches cash-flow break-even by Year 5, demonstrating a clear ROI."
                 }
-            }
+            },
+            currentScenario: 'revised'
         },
         timeline: [
             {
@@ -422,6 +486,144 @@ document.addEventListener('DOMContentLoaded', function () {
     const costCard = document.getElementById('cost-card');
     const talentCard = document.getElementById('talent-card');
 
+    const modal = document.getElementById('gemini-modal');
+    const modalTitle = document.getElementById('gemini-modal-title');
+    const modalCloseBtn = document.getElementById('gemini-modal-close');
+    const modalCopyBtn = document.getElementById('gemini-modal-copy');
+    const loader = document.getElementById('gemini-loader');
+    const outputDiv = document.getElementById('gemini-output');
+
+    // Gemini API Helper
+    async function callGemini(prompt, retries = 3, delay = 1000) {
+        const apiKey = ""; // API key will be injected by the environment
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{
+                role: "user",
+                parts: [{ text: prompt }]
+            }]
+        };
+
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error('Invalid response structure from Gemini API');
+                }
+            } catch (error) {
+                if (i === retries - 1) {
+                    console.error('Final attempt failed:', error);
+                    return `Error: Could not get a response from the AI. Please try again. Details: ${error.message}`;
+                }
+                await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+            }
+        }
+    }
+
+
+    function showModal(title) {
+        modalTitle.textContent = title;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        loader.classList.remove('hidden');
+        outputDiv.innerHTML = '';
+        modalCopyBtn.classList.add('hidden');
+    }
+
+    function hideModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function displayModalContent(text) {
+        loader.classList.add('hidden');
+        // A simple markdown to HTML converter
+        let html = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')     // Italics
+            .replace(/(\r\n|\n|\r)/g, '<br>');      // Newlines
+        outputDiv.innerHTML = html;
+        modalCopyBtn.classList.remove('hidden');
+    }
+
+    modalCloseBtn.addEventListener('click', hideModal);
+    modalCopyBtn.addEventListener('click', () => {
+        const textToCopy = outputDiv.innerText;
+        const textArea = document.createElement('textarea');
+        textArea.value = textToCopy;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        modalCopyBtn.textContent = 'Copied!';
+        setTimeout(() => { modalCopyBtn.textContent = 'Copy Text'; }, 2000);
+    });
+
+    // Feature 1: Summarize Strategy
+    document.getElementById('summarize-strategy-btn').addEventListener('click', async () => {
+        showModal('✨ AI Strategic Summary');
+        const prompt = `As a strategic consultant, provide a concise executive summary for ClimateX's expansion into India. Base your summary on these four key pillars:
+        1.  **Policy Tailwinds:** Favorable government policies like Net-Zero by 2070 and the National CCUS Mission.
+        2.  **Market Demand:** A large, immediate market in hard-to-abate sectors like steel and cement.
+        3.  **Cost Advantage:** Significantly lower operational and capital expenditures compared to other markets.
+        4.  **Talent Pool:** Access to a large, skilled, and cost-effective engineering talent pool.
+        Conclude with a strong recommendation.`;
+        const summary = await callGemini(prompt);
+        displayModalContent(summary);
+    });
+
+    // Feature 2: Brainstorm Risks
+    document.getElementById('brainstorm-risks-btn').addEventListener('click', async () => {
+        const container = document.getElementById('market-risks-container');
+        container.innerHTML = `<div class="flex justify-center items-center h-24"><div class="loader"></div></div>`;
+        const prompt = `You are a risk analysis expert for a climate tech company entering India. Brainstorm 3 potential market-specific risks beyond the obvious ones like policy delays or carbon price volatility. For each risk, provide a brief (1-2 sentence) mitigation strategy. Format the output clearly with headings for each risk.`;
+        const risks = await callGemini(prompt);
+        let html = risks
+            .replace(/\*\*(.*?)\*\*/g, '<h4 class="font-semibold text-lg text-red-800 mt-4">$1</h4>')
+            .replace(/(\r\n|\n|\r)/g, '<br>');
+        container.innerHTML = `<div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200/80 mt-8">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">✨ AI-Generated Risk Analysis</h2>
+            <div class="text-gray-600">${html}</div>
+        </div>`;
+    });
+
+    // Feature 3: Draft Stakeholder Email
+    document.getElementById('draft-email-btn').addEventListener('click', async () => {
+        showModal('✨ AI Draft: Stakeholder Update');
+        const scenario = data.financials.scenarios[data.financials.currentScenario];
+        const prompt = `Draft a professional and concise email update for stakeholders regarding ClimateX's India expansion financials.
+        
+        **Subject:** Update on India Expansion: Financial Projections
+        
+        **Key Information to Include:**
+        - We are proceeding with the **${scenario.name}**.
+        - **Rationale:** ${scenario.summary}
+        - **5-Year Revenue Projection:** Starts at $${scenario.revenue[0]}M and grows to $${scenario.revenue[4]}M.
+        - **Path to Profitability:** EBITDA turns positive in Year 5, reaching $${scenario.ebitda[4]}M.
+        - **Capital Efficiency:** The plan is designed to be fully funded by our current Series B round.
+        
+        Keep the tone confident and strategic.`;
+        const email = await callGemini(prompt);
+        displayModalContent(email);
+    });
+
+
     function setActiveSection(targetId) {
         contentSections.forEach(section => {
             section.classList.toggle('active', section.id === targetId);
@@ -434,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function () {
             renderMarketAnalysisChart();
         }
         if (targetId === 'financials' && !financialsChart) {
-            renderFinancialsChart('revised');
+            renderFinancialsChart(data.financials.currentScenario);
         }
         if (targetId === 'overview') {
             renderTimeline();
@@ -525,8 +727,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderFinancialsChart(scenario) {
-        const scenarioData = data.financials.scenarios[scenario];
+    function renderFinancialsChart(scenarioKey) {
+        data.financials.currentScenario = scenarioKey;
+        const scenarioData = data.financials.scenarios[scenarioKey];
         const financialSummary = document.getElementById('financial-summary');
         financialSummary.textContent = scenarioData.summary;
 
@@ -560,6 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (financialsChart) {
             financialsChart.data.datasets = datasets;
+            financialsChart.options.plugins.title.text = `5-Year Financial Projections (${scenarioData.name})`;
             financialsChart.update();
         } else {
             const ctx = document.getElementById('financialsChart').getContext('2d');
@@ -575,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     plugins: {
                         title: {
                             display: true,
-                            text: `5-Year Financial Projections (${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Plan)`,
+                            text: `5-Year Financial Projections (${scenarioData.name})`,
                             font: { size: 16, weight: 'bold' },
                             padding: { top: 10, bottom: 20 }
                         },
@@ -592,8 +796,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-        financialsChart.options.plugins.title.text = `5-Year Financial Projections (${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Plan)`;
-        financialsChart.update();
     }
     
     const scenarioButtons = document.querySelectorAll('.scenario-btn');
@@ -602,11 +804,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const scenario = button.id.split('-')[1];
             renderFinancialsChart(scenario);
             scenarioButtons.forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow');
                 btn.classList.add('bg-gray-200', 'text-gray-700');
             });
-            button.classList.add('bg-emerald-600', 'text-white');
-            button.classList.remove('bg-gray-200', 'text-gray-700');
+            button.classList.add('bg-emerald-600', 'text-white', 'shadow');
         });
     });
 
@@ -652,7 +853,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         container.querySelectorAll('.timeline-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                // Prevent closing when clicking inside the details
                 if (e.target.closest('.details-content')) {
                     return;
                 }
