@@ -129,7 +129,7 @@
                         <h3 class="font-semibold text-lg text-emerald-700">Policy Tailwinds</h3>
                         <p class="mt-2 text-gray-600">Aggressive climate goals (Net-Zero by 2070) and proactive frameworks like the National CCUS Mission create sustained demand.</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50">
+                    <div id="market-demand-card" class="bg-white p-6 rounded-xl shadow-md border border-gray-200/50 hover:shadow-lg hover:border-emerald-300 transition-all duration-300 cursor-pointer">
                         <h3 class="font-semibold text-lg text-emerald-700">Market Demand</h3>
                         <p class="mt-2 text-gray-600">Rapidly growing hard-to-abate sectors (steel, cement) create a massive, immediate market for CaptureLink™ CCS.</p>
                     </div>
@@ -320,6 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const contentSections = document.querySelectorAll('.content-section');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
+    const marketDemandCard = document.getElementById('market-demand-card');
 
     function setActiveSection(targetId) {
         contentSections.forEach(section => {
@@ -352,6 +353,16 @@ document.addEventListener('DOMContentLoaded', function () {
     mobileMenuButton.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
     });
+
+    if (marketDemandCard) {
+        marketDemandCard.addEventListener('click', () => {
+            setActiveSection('market');
+            const mainContent = document.querySelector('main');
+            if(mainContent) {
+                mainContent.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
 
     function renderMarketAnalysisChart() {
         const ctx = document.getElementById('marketAnalysisChart').getContext('2d');
@@ -536,3 +547,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
+
