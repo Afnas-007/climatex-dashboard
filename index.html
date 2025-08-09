@@ -90,6 +90,16 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-color: #6EE7B7;
         }
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+            padding: 0 1.5rem;
+        }
+        .timeline-item.active .details-content {
+            max-height: 1000px; /* Large enough to fit content */
+            padding: 1.5rem;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -293,32 +303,44 @@ document.addEventListener('DOMContentLoaded', function () {
             {
                 phase: 'Phase 1: Foundation & Early Wins (Years 1-2)',
                 title: 'Establish & Generate Early Revenue',
-                details: [
-                    'Incorporate wholly-owned subsidiary: ClimateX India Pvt. Ltd.',
-                    'Launch high-margin SaaS products: VeriScope™ & OffsetX™.',
-                    'Form strategic JV partnerships for CaptureLink™ CCS pilots with 2-3 leading industrial players.',
-                    'Hire core leadership team (Country Head, Head of Sales, Head of Ops).'
-                ]
+                details: {
+                    objectives: 'Establish a legal and operational footprint in India while generating immediate, high-margin revenue with low capital outlay. Build market intelligence and key industrial relationships.',
+                    leadProducts: 'Focus on the rapid deployment of VeriScope™ (EVaaS) and OffsetX™ (Marketplace) platforms. Initiate strategic partnerships for CaptureLink™ CCS pilots.',
+                    actionPlan: [
+                        'Incorporate wholly-owned subsidiary: ClimateX India Pvt. Ltd.',
+                        'Launch aggressive sales & marketing for SaaS products targeting companies under the CCTS mandate.',
+                        'Form strategic Joint Venture (JV) partnerships with 2-3 leading industrial players for CCS pilots.',
+                        'Hire core leadership team: Country Head, Head of Sales, and Head of Operations.'
+                    ]
+                }
             },
             {
                 phase: 'Phase 2: Pilot & Build (Years 3-4)',
                 title: 'Deploy Hardware & Build Infrastructure',
-                details: [
-                    'Initiate construction and commissioning of 2-3 pilot CaptureLink™ CCS projects.',
-                    'Establish local assembly hub for modular AtmosCore™ DAC units in a major industrial corridor (e.g., DMIC).',
-                    'Scale SaaS sales and customer support teams.',
-                    'Recruit specialized project management and engineering teams.'
-                ]
+                details: {
+                    objectives: 'Transition from planning to execution for the hardware business. Demonstrate technological efficacy in the Indian context and build a track record for future sales.',
+                    leadProducts: 'Initiate construction of pilot CaptureLink™ CCS projects. Begin establishment of the local assembly hub for modular AtmosCore™ DAC units.',
+                    actionPlan: [
+                        'Initiate construction and commissioning of 2-3 pilot CaptureLink™ CCS projects in key industrial clusters.',
+                        'Acquire land and begin construction of the AtmosCore™ DAC assembly hub in a major industrial corridor (e.g., DMIC).',
+                        'Scale SaaS sales and customer support teams to manage a growing client portfolio.',
+                        'Recruit specialized project management and engineering teams for CCS deployments.'
+                    ]
+                }
             },
             {
                 phase: 'Phase 3: Scale & Dominate (Year 5+)',
                 title: 'Achieve Commercial Scale & Market Leadership',
-                details: [
-                    'Convert successful CCS pilots into large-scale, long-term CRaaS contracts.',
-                    'Commercially launch modular AtmosCore™ DAC units from the Indian hub.',
-                    'Ramp up to full-scale production to meet domestic and regional demand.',
-                    'Solidify position as the premier end-to-end decarbonization partner in India.'
-                ]
+                details: {
+                    objectives: 'Convert successful pilots into large-scale, long-term contracts and establish ClimateX as the premier end-to-end decarbonization partner in India.',
+                    leadProducts: 'Commercially launch modular AtmosCore™ DAC units from the Indian hub. Aggressively expand market share across all product lines.',
+                    actionPlan: [
+                        'Convert CCS pilots into multi-year Carbon-Removal-as-a-Service (CRaaS) contracts.',
+                        'Commercially launch AtmosCore™ DAC units, targeting renewable-rich states and Green Hydrogen Hubs.',
+                        'Ramp up to full-scale production at the Indian assembly hub to meet domestic and regional demand.',
+                        'Solidify market leadership through aggressive sales and marketing efforts.'
+                    ]
+                }
             }
         ]
     };
@@ -520,15 +542,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
         data.timeline.forEach((item, index) => {
             const div = document.createElement('div');
-            div.className = `timeline-item relative pl-10 pb-10 cursor-pointer ${index === 0 ? 'active' : ''}`;
+            div.className = `timeline-item relative pl-10 pb-4 cursor-pointer`;
             div.innerHTML = `
                 <div class="timeline-dot"></div>
-                <h4 class="font-bold text-xl mb-1 text-gray-700">${item.phase}</h4>
-                <p class="text-gray-500 mb-3">${item.title}</p>
-                <div class="details hidden pl-4 border-l-2 border-emerald-200">
-                    <ul class="list-disc list-inside text-gray-600 space-y-1">
-                        ${item.details.map(d => `<li>${d}</li>`).join('')}
-                    </ul>
+                <div class="summary-view">
+                    <h4 class="font-bold text-xl mb-1 text-gray-800">${item.phase}</h4>
+                    <p class="text-gray-500 mb-3">${item.title}</p>
+                </div>
+                <div class="details-content bg-emerald-50/40 rounded-lg">
+                    <div class="space-y-4">
+                        <div>
+                            <h5 class="font-semibold text-lg text-emerald-800">Key Objectives</h5>
+                            <p class="text-gray-700">${item.details.objectives}</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-lg text-emerald-800">Lead Products & Strategy</h5>
+                            <p class="text-gray-700">${item.details.leadProducts}</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-lg text-emerald-800">Action Plan</h5>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1 mt-1">
+                                ${item.details.actionPlan.map(d => `<li>${d}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             `;
             container.appendChild(div);
@@ -536,17 +573,22 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const firstItem = container.querySelector('.timeline-item');
         if (firstItem) {
-            firstItem.querySelector('.details').classList.remove('hidden');
+            firstItem.classList.add('active');
         }
 
         container.querySelectorAll('.timeline-item').forEach(item => {
-            item.addEventListener('click', () => {
-                container.querySelectorAll('.timeline-item').forEach(i => {
-                    i.classList.remove('active');
-                    i.querySelector('.details').classList.add('hidden');
-                });
-                item.classList.add('active');
-                item.querySelector('.details').classList.remove('hidden');
+            item.addEventListener('click', (e) => {
+                // Prevent closing when clicking inside the details
+                if (e.target.closest('.details-content')) {
+                    return;
+                }
+
+                if (item.classList.contains('active')) {
+                    item.classList.remove('active');
+                } else {
+                    container.querySelectorAll('.timeline-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                }
             });
         });
     }
